@@ -3,62 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clasificación en Tiempo Real</title>
+    <title>Pantalla de Clasificación Animada</title>
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
     <style>
-        body { font-family: 'Segoe UI', Helvetica, sans-serif; background: #0b0c10; color: #ffffff; text-align: center; margin: 0; padding: 50px 20px; }
-        h1 { font-size: 55px; color: #66fcf1; text-shadow: 0 0 15px rgba(102,252,241,0.6); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
-        p { font-size: 20px; color: #c5c6c7; margin-bottom: 40px; }
-        .tabla { max-width: 850px; margin: 0 auto; background: #1f2833; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
-        .fila { display: flex; justify-content: space-between; align-items: center; padding: 22px 30px; margin: 15px 0; background: #151a21; border-radius: 12px; font-size: 32px; font-weight: 600; border-left: 8px solid #45f3ff; transition: all 0.4s ease-in-out; }
+        body { font-family: 'Segoe UI', Impact, sans-serif; background: #0f111a; color: #ffffff; margin: 0; padding: 40px 20px; text-align: center; }
+        h1 { font-size: 50px; color: #00fff0; text-shadow: 0 0 15px rgba(0,255,240,0.6); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px; }
+        p { font-size: 18px; color: #8f94a5; margin-bottom: 35px; }
         
-        /* Estilos VIP para el podio (Top 3) */
-        .fila:nth-child(1) { background: linear-gradient(90deg, #f1c40f, #1f2833); color: #000; border-left: 8px solid #f39c12; }
-        .fila:nth-child(2) { background: linear-gradient(90deg, #bdc3c7, #1f2833); color: #000; border-left: 8px solid #7f8c8d; }
-        .fila:nth-child(3) { background: linear-gradient(90deg, #e67e22, #1f2833); color: #000; border-left: 8px solid #d35400; }
+        .tabla { max-width: 900px; margin: 0 auto; background: #1a1d28; padding: 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
         
-        .puesto { width: 70px; text-align: left; font-size: 36px; }
-        .nombre { flex-grow: 1; text-align: left; margin-left: 10px; }
-        .puntos { font-size: 36px; color: #66fcf1; font-weight: bold; }
-        .fila:nth-child(-n+3) .puntos { color: #000; } /* Letras oscuras en los fondos brillantes del podio */
+        /* Contenedor de la fila de cada equipo */
+        .fila { display: flex; align-items: center; padding: 15px 25px; margin: 18px 0; background: #222634; border-radius: 12px; font-size: 28px; font-weight: bold; position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        
+        /* Elementos de texto fijos por encima de la barra */
+        .puesto { width: 60px; text-align: left; z-index: 2; color: #fff; font-size: 32px; }
+        .nombre { flex-grow: 1; text-align: left; margin-left: 10px; z-index: 2; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        .puntos { font-size: 32px; color: #00fff0; font-weight: bold; z-index: 2; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+
+        /* Estructura y animación de la barra de progreso de fondo */
+        .barra-progreso { position: absolute; left: 0; top: 0; height: 100%; width: 0%; z-index: 1; transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0.85; }
+
+        /* Colores temáticos de las barras según el equipo */
+        .barra-Dolphins { background: linear-gradient(90deg, #1976d2, #42a5f5); }
+        .barra-Seagulls { background: linear-gradient(90deg, #f57c00, #ffb74d); }
+        .barra-Eagles { background: linear-gradient(90deg, #388e3c, #66bb6a); }
+        .barra-Horses { background: linear-gradient(90deg, #7b1fa2, #ba68c8); }
+
+        /* Efecto de brillo animado en la barra del líder (#1) */
+        .fila:nth-child(1) { border: 2px solid #00fff0; box-shadow: 0 0 15px rgba(0,255,240,0.3); }
     </style>
 </head>
 <body>
 
-    <h1>🏆 Marcador en Tiempo Real 🏆</h1>
-    <p>Clasificación automática por puntos numéricos</p>
+    <h1>🏆 COMPETENCIA EN TIEMPO REAL 🏆</h1>
+    <p>Las barras se expanden y las posiciones cambian automáticamente</p>
 
     <div class="tabla" id="tabla-posiciones">
-        <!-- Posiciones dinámicas -->
+        <!-- Las posiciones con barras animadas se cargan aquí -->
     </div>
 
     <script>
-        // Configuración de Firebase (Usa la misma que en el celular)
+        // CONFIGURACIÓN DE FIREBASE (Usa exactamente la misma del celular)
         const firebaseConfig = {
             databaseURL: "https://firebaseio.com"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Monitorear cambios numéricos y reordenar puestos
-        db.ref('marcador_equipos').on('value', (snapshot) => {
+        // Escuchar variaciones numéricas de los 5 equipos
+        db.ref('marcador_5_equipos').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
 
-            // Pasar los datos mapeados a una lista ordenada
+            // Convertir base de datos a lista mapeada
             const listaEquipos = Object.keys(data).map(id => data[id]);
             
-            // Ordenar numéricamente de Mayor a Menor puntos
+            // Ordenar de Mayor a Menor puntaje
             listaEquipos.sort((a, b) => b.puntos - a.puntos);
+
+            // Encontrar el puntaje más alto actual para calcular el porcentaje de la barra
+            const puntajeMaximo = Math.max(...listaEquipos.map(e => e.puntos), 1);
 
             const tabla = document.getElementById('tabla-posiciones');
             tabla.innerHTML = "";
 
-            // Renderizar los puestos actualizados
             listaEquipos.forEach((equipo, indice) => {
+                // Calcular el porcentaje de llenado de la barra (mínimo 5% para que se vea el color inicial)
+                let porcentajeBarra = (equipo.puntos / puntajeMaximo) * 100;
+                if (equipo.puntos > 0 && porcentajeBarra < 8) porcentajeBarra = 8; 
+                if (equipo.puntos === 0) porcentajeBarra = 0;
+
                 tabla.innerHTML += `
                     <div class="fila">
+                        <!-- Barra animada de fondo -->
+                        <div class="barra-progreso barra-${equipo.nombre}" style="width: ${porcentajeBarra}%"></div>
+                        
+                        <!-- Datos del equipo al frente -->
                         <span class="puesto">#${indice + 1}</span>
                         <span class="nombre">${equipo.nombre}</span>
                         <span class="puntos">${equipo.puntos} Pts</span>
