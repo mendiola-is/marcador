@@ -3,63 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Puntos - Equipos</title>
+    <title>Control de Puntos - 5 Equipos</title>
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; background: #f4f6f9; text-align: center; color: #333; }
-        h1 { font-size: 24px; margin-bottom: 20px; color: #2c3e50; }
-        .card { background: white; padding: 20px; margin: 12px 0; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #3498db; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 15px; background: #f4f6f9; text-align: center; color: #333; margin: 0; }
+        h1 { font-size: 22px; margin-bottom: 15px; color: #2c3e50; }
+        .contenedor-cards { max-width: 500px; margin: 0 auto; }
+        .card { background: white; padding: 15px; margin: 12px 0; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #3498db; }
+        
+        /* Colores distintivos por equipo en el celular */
+        #card-Houses { border-left-color: #e74c3c; }
+        #card-Dolphins { border-left-color: #3498db; }
+        #card-Seagulls { border-left-color: #f1c40f; }
+        #card-Eagles { border-left-color: #2ecc71; }
+        #card-Horses { border-left-color: #9b59b6; }
+
         .info { text-align: left; }
-        .info h2 { margin: 0; font-size: 22px; color: #2c3e50; }
-        .info span { font-size: 16px; color: #7f8c8d; }
-        .botones { display: flex; gap: 10px; }
-        button { border: none; padding: 12px 20px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: transform 0.1s; }
-        button:active { transform: scale(0.95); }
-        .btn-restar { background: #e74c3c; color: white; }
-        .btn-sumar { background: #2ecc71; color: white; }
+        .info h2 { margin: 0; font-size: 20px; color: #2c3e50; }
+        .info span { font-size: 15px; color: #7f8c8d; font-weight: bold; }
+        .botones { display: flex; gap: 8px; }
+        button { border: none; padding: 12px 18px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: transform 0.1s; user-select: none; }
+        button:active { transform: scale(0.9); }
+        .btn-restar { background: #95a5a6; color: white; }
+        .btn-sumar { background: #2c3e50; color: white; color: #fff; }
+        
+        /* Color de suma según equipo */
+        #card-Houses .btn-sumar { background: #e74c3c; }
+        #card-Dolphins .btn-sumar { background: #3498db; }
+        #card-Seagulls .btn-sumar { background: #f1c40f; color: #000; }
+        #card-Eagles .btn-sumar { background: #2ecc71; }
+        #card-Horses .btn-sumar { background: #9b59b6; }
     </style>
 </head>
 <body>
 
-    <h1>📱 Panel de Control de Puntos</h1>
-    <div id="lista-equipos"></div>
+    <h1>📱 Panel de Control (5 Equipos)</h1>
+    <div class="contenedor-cards" id="lista-equipos"></div>
 
     <script>
-        // Configuración de Firebase (Reemplaza con tu URL)
+        // CONFIGURACIÓN DE FIREBASE (Reemplaza con tu URL real)
         const firebaseConfig = {
             databaseURL: "https://firebaseio.com" 
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Tus 4 equipos establecidos con puntaje inicial en 0
+        // Estructura fija de los 5 equipos solicitados
         const equiposIniciales = [
-            { id: "eq1", nombre: "Horses", puntos: 0 },
-            { id: "eq2", nombre: "Seagulls", puntos: 0 },
-            { id: "eq3", nombre: "Dolphins", puntos: 0 },
-            { id: "eq4", nombre: "Eagles", puntos: 0 }
+            { id: "Houses", nombre: "Houses", puntos: 0 },
+            { id: "Dolphins", nombre: "Dolphins", puntos: 0 },
+            { id: "Seagulls", nombre: "Seagulls", puntos: 0 },
+            { id: "Eagles", nombre: "Eagles", puntos: 0 },
+            { id: "Horses", nombre: "Horses", puntos: 0 }
         ];
 
-        // Sincronizar y mostrar equipos en el celular
-        db.ref('marcador_equipos').on('value', (snapshot) => {
+        // Sincronizar Base de Datos y dibujar los botones
+        db.ref('marcador_5_equipos').on('value', (snapshot) => {
             const data = snapshot.val();
             const contenedor = document.getElementById('lista-equipos');
             contenedor.innerHTML = "";
 
-            // Si la base de datos está limpia, inyecta tus 4 equipos
             if (!data) {
-                equiposIniciales.forEach(eq => db.ref('marcador_equipos/' + eq.id).set(eq));
+                equiposIniciales.forEach(eq => db.ref('marcador_5_equipos/' + eq.id).set(eq));
                 return;
             }
 
             Object.keys(data).forEach(id => {
                 const eq = data[id];
                 contenedor.innerHTML += `
-                    <div class="card">
+                    <div class="card" id="card-${eq.nombre}">
                         <div class="info">
                             <h2>${eq.nombre}</h2>
-                            <span>${eq.puntos} puntos</span>
+                            <span>${eq.puntos} Pts</span>
                         </div>
                         <div class="botones">
                             <button class="btn-restar" onclick="modificarPuntos('${eq.id}', -1)">-1</button>
@@ -70,10 +86,12 @@
             });
         });
 
-        // Función matemática directa para actualizar los puntos
         function modificarPuntos(id, cambio) {
-            const ref = db.ref('marcador_equipos/' + id + '/puntos');
-            ref.transaction((puntosActuales) => (puntosActuales || 0) + cambio);
+            const ref = db.ref('marcador_5_equipos/' + id + '/puntos');
+            ref.transaction((puntosActuales) => {
+                const nuevoPuntaje = (puntosActuales || 0) + cambio;
+                return nuevoPuntaje < 0 ? 0 : nuevoPuntaje; // Evita que los puntos sean negativos
+            });
         }
     </script>
 </body>
